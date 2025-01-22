@@ -1,0 +1,27 @@
+[licenses]
+allow = [
+  # permissive licenses
+  "Apache-2.0",
+  "BSL-1.0",
+  "BSD-3-Clause",
+  "ISC",
+  "MIT",
+  "Unlicense",
+  "Unicode-3.0",
+  "Zlib",
+  # permissive license with unclear patent grant
+  "CC0-1.0",
+  # weak/limited copyleft licenses
+  "MPL-2.0",
+  "OpenSSL", # https://en.wikipedia.org/wiki/OpenSSL#Licensing
+]
+
+# Clearify licence: https://github.com/briansmith/ring/issues/902
+# Plan to remove OpenSSL: https://github.com/briansmith/ring/issues/1827
+[[licenses.clarify]]
+expression = "ISC AND MIT AND OpenSSL"
+license-files = [{ path = "LICENSE", hash = 0xbd0eed23 }]
+name = "ring"
+
+[bans]
+multiple-versions = "allow"
