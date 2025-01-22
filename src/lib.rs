@@ -91,7 +91,8 @@ where
     P: Provider<T, N>,
 {
     async fn subscribe_mev_blocker_pending_transactions(&self) -> TransportResult<alloy_pubsub::Subscription<MevBlockerTx>> {
-        //self.root().pubsub_frontend()?; // TODO: Method `pubsub_frontend` is private in alloy. Hope this will change in the future
+        self.root().client().pubsub_frontend().ok_or_else(alloy_transport::TransportErrorKind::pubsub_unavailable)?;
+
         let mut call = self.client().request("eth_subscribe", ("mevBlocker_subscribePartialPendingTransactions",));
         call.set_is_subscription();
         let id = call.await?;
