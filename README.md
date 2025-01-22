@@ -1,6 +1,6 @@
 # Alloy MEV Blocker Client
 
-This crate provides an extension to use the [Searchers API](https://docs.cow.fi/mevblocker/searchers/listening-for-transactions) of [MEV Blocker](https://cow.fi/mev-blocker) with [Alloy](https://github.com/alloy-rs/alloy). Since the signature fields are stripped, the parsing of the transaction fails silently in Alloy. For that reason, this extension adds those fields on-the-fly during the deserialization so that a pending transaction can be deserialized into an `alloy_rpc_types_eth::Transaction`.
+This crate allows to subscribe to events from the [Searchers API](https://docs.cow.fi/mevblocker/searchers/listening-for-transactions) of [MEV Blocker](https://cow.fi/mev-blocker) with [Alloy](https://github.com/alloy-rs/alloy). Since the signature fields are stripped, the parsing of the transaction fails silently in Alloy. To address this, the extension dynamically adds these fields during deserialization, enabling a pending MEV Blocker transaction to be deserialized into an `alloy_rpc_types_eth::Transaction`.
 
 
 # Why not fix this in Alloy?
