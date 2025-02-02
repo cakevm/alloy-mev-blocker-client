@@ -1,7 +1,7 @@
 use alloy_consensus::TxEnvelope;
 use alloy_provider::{Network, Provider};
 use alloy_rpc_types_eth::Transaction;
-use alloy_transport::{Transport, TransportResult};
+use alloy_transport::TransportResult;
 use async_trait::async_trait;
 use serde::{Deserialize, Deserializer};
 use serde_json::Value;
@@ -79,16 +79,15 @@ impl<'de> Deserialize<'de> for MevBlockerTx {
 }
 
 #[async_trait]
-pub trait MevBlockerApi<N, T>: Send + Sync {
+pub trait MevBlockerApi<N>: Send + Sync {
     async fn subscribe_mev_blocker_pending_transactions(&self) -> TransportResult<alloy_pubsub::Subscription<MevBlockerTx>>;
 }
 
 #[async_trait]
-impl<N, T, P> MevBlockerApi<N, T> for P
+impl<N, P> MevBlockerApi<N> for P
 where
     N: Network,
-    T: Transport + Clone,
-    P: Provider<T, N>,
+    P: Provider<N>,
 {
     async fn subscribe_mev_blocker_pending_transactions(&self) -> TransportResult<alloy_pubsub::Subscription<MevBlockerTx>> {
         self.root().client().pubsub_frontend().ok_or_else(alloy_transport::TransportErrorKind::pubsub_unavailable)?;
