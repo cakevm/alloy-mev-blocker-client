@@ -23,5 +23,13 @@ expression = "ISC AND MIT AND OpenSSL"
 license-files = [{ path = "LICENSE", hash = 0xbd0eed23 }]
 name = "ring"
 
+[advisories]
+ignore = [
+  # https://rustsec.org/advisories/RUSTSEC-2024-0436 paste! is unmaintained
+  "RUSTSEC-2024-0436",
+  # https://rustsec.org/advisories/RUSTSEC-2025-0009 ring may panic when overflow checking is enabled.
+  "RUSTSEC-2025-0009",
+]
+
 [bans]
 multiple-versions = "allow"

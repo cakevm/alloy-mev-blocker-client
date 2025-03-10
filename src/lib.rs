@@ -102,7 +102,9 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use alloy_primitives::address;
+    use alloy_primitives::{address, TxHash};
+    use alloy_provider::network::TransactionResponse;
+    use std::str::FromStr;
 
     #[test]
     fn test_deserialize_type_0() {
@@ -118,7 +120,8 @@ mod tests {
         }"#;
 
         let tx: MevBlockerTx = serde_json::from_str(tx_raw).unwrap();
-        assert_eq!(tx.0.from, address!("29ef51af25c37f274c994ea520e3925772ac1bd3"));
+        assert_eq!(tx.0.from(), address!("29ef51af25c37f274c994ea520e3925772ac1bd3"));
+        assert_eq!(tx.0.tx_hash(), TxHash::from_str("0xbfb35a8a3e435b7d78ab3c187904fd9bb72ef0e0fd2c28b5d979f71f01d2fca5").unwrap());
     }
 
     #[test]
@@ -139,7 +142,8 @@ mod tests {
         }"#;
 
         let tx: MevBlockerTx = serde_json::from_str(tx_raw).unwrap();
-        assert_eq!(tx.0.from, address!("ab10b06f30a148ff6cfe0d1ee5441a7d2643a610"));
+        assert_eq!(tx.0.from(), address!("ab10b06f30a148ff6cfe0d1ee5441a7d2643a610"));
+        assert_eq!(tx.0.tx_hash(), TxHash::from_str("0xe2e1255ea1d8f60a0867095253beac0819c86b4e5341cf30c90d23a702a3fa6e").unwrap());
     }
 
     #[test]
@@ -159,7 +163,8 @@ mod tests {
         }"#;
 
         let tx: MevBlockerTx = serde_json::from_str(raw_tx).unwrap();
-        assert_eq!(tx.0.from, address!("a73b2ec30bf671daac4f7ac0428cbd3641251bd9"));
+        assert_eq!(tx.0.from(), address!("a73b2ec30bf671daac4f7ac0428cbd3641251bd9"));
+        assert_eq!(tx.0.tx_hash(), TxHash::from_str("0xbebfd9b44436d788d73793fb8165c6385333eeea97df4c897b29f2391516a0be").unwrap());
     }
 
     #[test]
@@ -192,7 +197,8 @@ mod tests {
         }"#;
 
         let tx: MevBlockerTx = serde_json::from_str(tx_raw).unwrap();
-        assert_eq!(tx.0.from, address!("00806daa2cfe49715ea05243ff259deb195760fc"));
+        assert_eq!(tx.0.from(), address!("00806daa2cfe49715ea05243ff259deb195760fc"));
+        assert_eq!(tx.0.tx_hash(), TxHash::from_str("0xc1bc47c70dcfb9fe381432e71509b6909df55c99197750782a86aca8570fdfe3").unwrap());
     }
 
     #[test]
@@ -213,6 +219,7 @@ mod tests {
         }"#;
 
         let tx: MevBlockerTx = serde_json::from_str(raw_tx).unwrap();
-        assert_eq!(tx.0.from, address!("52ee324f2bcd0c5363d713eb9f62d1ee47266ac1"));
+        assert_eq!(tx.0.from(), address!("52ee324f2bcd0c5363d713eb9f62d1ee47266ac1"));
+        assert_eq!(tx.0.tx_hash(), TxHash::from_str("1fb55f6e31763cc5f77c3aa2f92d28415c771f9f34c17e280b70c2fe23837fed").unwrap());
     }
 }
