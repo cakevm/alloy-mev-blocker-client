@@ -13,7 +13,6 @@ allow = [
   "CC0-1.0",
   # weak/limited copyleft licenses
   "MPL-2.0",
-  "OpenSSL", # https://en.wikipedia.org/wiki/OpenSSL#Licensing
 ]
 
 # Clearify licence: https://github.com/briansmith/ring/issues/902
@@ -27,8 +26,8 @@ name = "ring"
 ignore = [
   # https://rustsec.org/advisories/RUSTSEC-2024-0436 paste! is unmaintained
   "RUSTSEC-2024-0436",
-  # https://rustsec.org/advisories/RUSTSEC-2025-0009 ring may panic when overflow checking is enabled.
-  "RUSTSEC-2025-0009",
+  # https://rustsec.org/advisories/RUSTSEC-2025-0022 openssl issue
+  "RUSTSEC-2025-0022"
 ]
 
 [bans]

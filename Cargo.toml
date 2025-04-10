@@ -5,13 +5,13 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-alloy-consensus = "0.12.2"
+alloy-consensus = "0.13.0"
 alloy-primitives = { version = "0.8.20", features = ["serde"] }
-alloy-provider = { version = "0.12.2", features = ["ws"] }
-alloy-pubsub = "0.12.2"
-alloy-rpc-types-eth = "0.12.2"
-alloy-transport = "0.12.2"
-alloy-transport-ws = "0.12.2"
+alloy-provider = { version = "0.13.0", features = ["ws"] }
+alloy-pubsub = "0.13.0"
+alloy-rpc-types-eth = "0.13.0"
+alloy-transport = "0.13.0"
+alloy-transport-ws = "0.13.0"
 async-trait = "0.1.86"
 serde = { version = "1.0.217", features = ["derive"] }
 serde_json = { version = "1.0.138" }
@@ -19,5 +19,5 @@ tracing = "0.1.41"
 
 [dev-dependencies]
 futures-util = "0.3.31"
-tokio = { version = "1.43.0", features = ["rt-multi-thread"] }
+tokio = { version = "1.44.2", features = ["rt-multi-thread"] }
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
