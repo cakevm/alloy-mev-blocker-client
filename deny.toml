@@ -26,8 +26,6 @@ name = "ring"
 ignore = [
   # https://rustsec.org/advisories/RUSTSEC-2024-0436 paste! is unmaintained
   "RUSTSEC-2024-0436",
-  # https://rustsec.org/advisories/RUSTSEC-2025-0022 openssl issue
-  "RUSTSEC-2025-0022"
 ]
 
 [bans]
