@@ -15,7 +15,7 @@ async fn main() -> Result<(), TransportError> {
 
     // Connect to MEV Blocker searchers API
     let ws_client = WsConnect::new(MEV_BLOCKER_SEARCHERS_URL);
-    let provider = ProviderBuilder::new().on_ws(ws_client).await?;
+    let provider = ProviderBuilder::new().connect_ws(ws_client).await?;
 
     // Here we subscribe to MEV Blocker pending transactions
     let subscription = provider.subscribe_mev_blocker_pending_transactions().await?;

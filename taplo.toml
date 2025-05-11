@@ -1,4 +1,4 @@
-include = ["Cargo.toml"]
+include = ["Cargo.toml", "deny.toml", "taplo.toml"]
 
 [formatting]
 align_comments = false
@@ -11,8 +11,8 @@ reorder_keys = true
 
 [[rule]]
 # Do not reorder to keep name and version on top
-keys = ["package"]
 formatting = { reorder_keys = false }
+keys = ["package"]
 
 [[rule]]
-keys = ["package", "build-dependencies", "dependencies", "dev-dependencies"]
+keys = ["build-dependencies", "dependencies", "dev-dependencies", "package"]
