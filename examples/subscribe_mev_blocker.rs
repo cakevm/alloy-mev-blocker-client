@@ -1,4 +1,4 @@
-use alloy_mev_blocker_client::{MevBlockerApi, MEV_BLOCKER_SEARCHERS_URL};
+use alloy_mev_blocker_client::{MEV_BLOCKER_SEARCHERS_URL, MevBlockerApi};
 use alloy_provider::ProviderBuilder;
 use alloy_transport::TransportError;
 use alloy_transport_ws::WsConnect;
@@ -6,7 +6,7 @@ use futures_util::StreamExt;
 use tracing::info;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
-use tracing_subscriber::{fmt, EnvFilter};
+use tracing_subscriber::{EnvFilter, fmt};
 
 #[tokio::main]
 async fn main() -> Result<(), TransportError> {

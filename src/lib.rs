@@ -24,10 +24,10 @@ impl<'de> Deserialize<'de> for MevBlockerTx {
         let original_input = value.to_string(); // Save the original value for logging
 
         // If the "type" field is missing, add type 0x0
-        if value.get("type").is_none() {
-            if let Some(obj) = value.as_object_mut() {
-                obj.insert("type".to_string(), Value::String("0x0".to_string()));
-            }
+        if value.get("type").is_none()
+            && let Some(obj) = value.as_object_mut()
+        {
+            obj.insert("type".to_string(), Value::String("0x0".to_string()));
         }
 
         // Put the content of the "data" field into the "input" field
@@ -44,15 +44,15 @@ impl<'de> Deserialize<'de> for MevBlockerTx {
         value.as_object_mut().unwrap().remove("data");
 
         if value.get("type").unwrap_or(&Value::String("0x".to_string())).as_str().unwrap_or_default() == "0x3" {
-            if value.get("blobVersionedHashes").is_none() {
-                if let Some(obj) = value.as_object_mut() {
-                    obj.insert("blobVersionedHashes".to_string(), Value::Array(vec![]));
-                }
+            if value.get("blobVersionedHashes").is_none()
+                && let Some(obj) = value.as_object_mut()
+            {
+                obj.insert("blobVersionedHashes".to_string(), Value::Array(vec![]));
             }
-            if value.get("maxFeePerBlobGas").is_none() {
-                if let Some(obj) = value.as_object_mut() {
-                    obj.insert("maxFeePerBlobGas".to_string(), Value::String("0x0".to_string()));
-                }
+            if value.get("maxFeePerBlobGas").is_none()
+                && let Some(obj) = value.as_object_mut()
+            {
+                obj.insert("maxFeePerBlobGas".to_string(), Value::String("0x0".to_string()));
             }
         }
 
@@ -102,7 +102,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use alloy_primitives::{address, TxHash};
+    use alloy_primitives::{TxHash, address};
     use alloy_provider::network::TransactionResponse;
     use std::str::FromStr;
 
