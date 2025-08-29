@@ -56,6 +56,14 @@ impl<'de> Deserialize<'de> for MevBlockerTx {
             }
         }
 
+        // If the "type" field is 0x4 and "authorizationList" is missing, add an empty array
+        if value.get("type").unwrap_or(&Value::String("0x".to_string())).as_str().unwrap_or_default() == "0x4"
+            && value.get("authorizationList").is_none()
+            && let Some(obj) = value.as_object_mut()
+        {
+            obj.insert("authorizationList".to_string(), Value::Array(vec![]));
+        }
+
         // Add the "r", "s", "v" fields
         if let Some(obj) = value.as_object_mut() {
             obj.insert("r".to_string(), Value::String("".to_string()));
@@ -112,23 +120,23 @@ mod tests {
             "nonce": "0x1",
             "gasPrice": "0x171a390d1",
             "gas": "0xb6bd",
-            "to": "0x8b6301d34de337698ba27e01a30b74799aed7b4a",
+            "to": "0xa1b2c3d4e5f6789abcdef0123456789abcdef012",
             "value": "0x0",
             "data": "0x1234",
-            "hash": "0xbfb35a8a3e435b7d78ab3c187904fd9bb72ef0e0fd2c28b5d979f71f01d2fca5",
-            "from": "0x29ef51af25c37f274c994ea520e3925772ac1bd3"
+            "hash": "0x1111111111111111111111111111111111111111111111111111111111111111",
+            "from": "0xfedcba0987654321fedcba0987654321fedcba09"
         }"#;
 
         let tx: MevBlockerTx = serde_json::from_str(tx_raw).unwrap();
-        assert_eq!(tx.0.from(), address!("29ef51af25c37f274c994ea520e3925772ac1bd3"));
-        assert_eq!(tx.0.tx_hash(), TxHash::from_str("0xbfb35a8a3e435b7d78ab3c187904fd9bb72ef0e0fd2c28b5d979f71f01d2fca5").unwrap());
+        assert_eq!(tx.0.from(), address!("fedcba0987654321fedcba0987654321fedcba09"));
+        assert_eq!(tx.0.tx_hash(), TxHash::from_str("0x1111111111111111111111111111111111111111111111111111111111111111").unwrap());
     }
 
     #[test]
     fn test_deserialize_type_2() {
         let tx_raw = r#"{
             "chainId": "0x1",
-            "to": "0xf3de3c0d654fda23dad170f0f320a92172509127",
+            "to": "0x9876543210abcdef9876543210abcdef98765432",
             "value": "0x409d6f54da38000",
             "data": "0x1234",
             "accessList": [],
@@ -137,20 +145,20 @@ mod tests {
             "maxFeePerGas": "0x171906896",
             "gas": "0x262e6",
             "type": "0x2",
-            "hash": "0xe2e1255ea1d8f60a0867095253beac0819c86b4e5341cf30c90d23a702a3fa6e",
-            "from": "0xab10b06f30a148ff6cfe0d1ee5441a7d2643a610"
+            "hash": "0x3333333333333333333333333333333333333333333333333333333333333333",
+            "from": "0xabcdef0123456789abcdef0123456789abcdef01"
         }"#;
 
         let tx: MevBlockerTx = serde_json::from_str(tx_raw).unwrap();
-        assert_eq!(tx.0.from(), address!("ab10b06f30a148ff6cfe0d1ee5441a7d2643a610"));
-        assert_eq!(tx.0.tx_hash(), TxHash::from_str("0xe2e1255ea1d8f60a0867095253beac0819c86b4e5341cf30c90d23a702a3fa6e").unwrap());
+        assert_eq!(tx.0.from(), address!("abcdef0123456789abcdef0123456789abcdef01"));
+        assert_eq!(tx.0.tx_hash(), TxHash::from_str("0x3333333333333333333333333333333333333333333333333333333333333333").unwrap());
     }
 
     #[test]
     fn test_deserialize_type_1() {
         let raw_tx = r#"{
             "chainId": "0x1",
-            "to": "0x7a250d5630b4cf539739df2c5dacb4c659f2488d",
+            "to": "0xdef9876543210abcdef9876543210abcdef98765",
             "value": "0xfc1eb84cae93d1d",
             "data": "0x1234",
             "accessList": [],
@@ -158,29 +166,29 @@ mod tests {
             "gasPrice": "0x239cfbce0",
             "gas": "0x31cf1",
             "type": "0x1",
-            "hash": "0xbebfd9b44436d788d73793fb8165c6385333eeea97df4c897b29f2391516a0be",
-            "from": "0xa73b2ec30bf671daac4f7ac0428cbd3641251bd9"
+            "hash": "0x2222222222222222222222222222222222222222222222222222222222222222",
+            "from": "0x123456789abcdef0123456789abcdef012345678"
         }"#;
 
         let tx: MevBlockerTx = serde_json::from_str(raw_tx).unwrap();
-        assert_eq!(tx.0.from(), address!("a73b2ec30bf671daac4f7ac0428cbd3641251bd9"));
-        assert_eq!(tx.0.tx_hash(), TxHash::from_str("0xbebfd9b44436d788d73793fb8165c6385333eeea97df4c897b29f2391516a0be").unwrap());
+        assert_eq!(tx.0.from(), address!("123456789abcdef0123456789abcdef012345678"));
+        assert_eq!(tx.0.tx_hash(), TxHash::from_str("0x2222222222222222222222222222222222222222222222222222222222222222").unwrap());
     }
 
     #[test]
     fn test_deserialize_type_2_with_access_list() {
         let tx_raw = r#"{
             "chainId": "0x1",
-            "to": "0x9008d19f58aabd9ed0d60971565aa8510560ab41",
+            "to": "0x5432109876543210987654321098765432109876",
             "value": "0x0",
             "data": "0x1234",
             "accessList": [
                 {
-                    "address": "0x1923dfee706a8e78157416c29cbccfde7cdf4102",
+                    "address": "0x1111111111111111111111111111111111111111",
                     "storageKeys": []
                 },
                 {
-                    "address": "0x2c4c28ddbdac9c5e7055b4c863b72ea0149d8afe",
+                    "address": "0x2222222222222222222222222222222222222222",
                     "storageKeys": [
                         "0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc",
                         "0x97b1af316dcacf90a3ec3fed778de1155ab6cfb9c9285e99caa9742e51837418"
@@ -192,13 +200,13 @@ mod tests {
             "maxFeePerGas": "0x6c455a394",
             "gas": "0xf3936",
             "type": "0x2",
-            "hash": "0xc1bc47c70dcfb9fe381432e71509b6909df55c99197750782a86aca8570fdfe3",
-            "from": "0x00806daa2cfe49715ea05243ff259deb195760fc"
+            "hash": "0x4444444444444444444444444444444444444444444444444444444444444444",
+            "from": "0x0987654321098765432109876543210987654321"
         }"#;
 
         let tx: MevBlockerTx = serde_json::from_str(tx_raw).unwrap();
-        assert_eq!(tx.0.from(), address!("00806daa2cfe49715ea05243ff259deb195760fc"));
-        assert_eq!(tx.0.tx_hash(), TxHash::from_str("0xc1bc47c70dcfb9fe381432e71509b6909df55c99197750782a86aca8570fdfe3").unwrap());
+        assert_eq!(tx.0.from(), address!("0987654321098765432109876543210987654321"));
+        assert_eq!(tx.0.tx_hash(), TxHash::from_str("0x4444444444444444444444444444444444444444444444444444444444444444").unwrap());
     }
 
     #[test]
@@ -207,19 +215,41 @@ mod tests {
             "accessList": [],
             "chainId": "0x1",
             "data": null,
-            "from": "0x52ee324f2bcd0c5363d713eb9f62d1ee47266ac1",
+            "from": "0x6789abcdef0123456789abcdef0123456789abcd",
             "gas": "0x5208",
-            "hash": "0x1fb55f6e31763cc5f77c3aa2f92d28415c771f9f34c17e280b70c2fe23837fed",
+            "hash": "0x5555555555555555555555555555555555555555555555555555555555555555",
             "maxFeePerGas": "0x60b66031a",
             "maxPriorityFeePerGas": "0x0",
             "nonce": "0x6663",
-            "to": "0x9be0c82d5ba973a9e6861695626d4f9983e80c88",
+            "to": "0xcdef0123456789abcdef0123456789abcdef0123",
             "type": "0x3",
             "value": "0x0"
         }"#;
 
         let tx: MevBlockerTx = serde_json::from_str(raw_tx).unwrap();
-        assert_eq!(tx.0.from(), address!("52ee324f2bcd0c5363d713eb9f62d1ee47266ac1"));
-        assert_eq!(tx.0.tx_hash(), TxHash::from_str("1fb55f6e31763cc5f77c3aa2f92d28415c771f9f34c17e280b70c2fe23837fed").unwrap());
+        assert_eq!(tx.0.from(), address!("6789abcdef0123456789abcdef0123456789abcd"));
+        assert_eq!(tx.0.tx_hash(), TxHash::from_str("5555555555555555555555555555555555555555555555555555555555555555").unwrap());
+    }
+
+    #[test]
+    fn test_deserialize_type_4() {
+        let tx_raw = r#"{
+            "accessList": [],
+            "chainId": "0x1",
+            "data": "0x2ba03a7900000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000030b5149626955069c159d21045a01175035b986656c1226d46060f151e6cece0919254a91a60a8fc2e21fdd4ff73b15df300000000000000000000000000000000",
+            "from": "0xa1b2c3d4e5f6789abcdef0123456789abcdef012",
+            "gas": "0x30d40",
+            "hash": "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+            "maxFeePerGas": "0x1605dd319",
+            "maxPriorityFeePerGas": "0x0",
+            "nonce": "0x2c",
+            "to": "0xfedcba0987654321fedcba0987654321fedcba09",
+            "type": "0x4",
+            "value": "0x0"
+        }"#;
+
+        let tx: MevBlockerTx = serde_json::from_str(tx_raw).unwrap();
+        assert_eq!(tx.0.from(), address!("a1b2c3d4e5f6789abcdef0123456789abcdef012"));
+        assert_eq!(tx.0.tx_hash(), TxHash::from_str("0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef").unwrap());
     }
 }
