@@ -10,6 +10,8 @@ use tracing_subscriber::{EnvFilter, fmt};
 
 #[tokio::main]
 async fn main() -> Result<(), TransportError> {
+    rustls::crypto::aws_lc_rs::default_provider().install_default().expect("Failed to install default CryptoProvider");
+
     // Change this to "trace" to see websocket messages that alloy receives
     tracing_subscriber::registry().with(fmt::layer()).with(EnvFilter::from("info")).init();
 

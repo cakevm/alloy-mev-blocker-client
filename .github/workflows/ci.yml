@@ -11,7 +11,6 @@ env:
 
 jobs:
   test:
-    if: github.repository == 'cakevm/alloy-mev-blocker-client'
     name: make test
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -25,7 +24,6 @@ jobs:
       - run: make test
 
   fmt:
-    if: github.repository == 'cakevm/alloy-mev-blocker-client'
     name: make fmt-check
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -59,7 +57,6 @@ jobs:
       - run: make taplo-check
 
   clippy:
-    if: github.repository == 'cakevm/alloy-mev-blocker-client'
     name: make clippy
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -75,7 +72,6 @@ jobs:
       - run: make clippy
 
   deny:
-    if: github.repository == 'cakevm/alloy-mev-blocker-client'
     name: cargo deny check
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -86,7 +82,6 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.ref }}
       - uses: EmbarkStudios/cargo-deny-action@v1
         with:
-          rust-version: "1.89.0"
           log-level: warn
           command: check
           arguments: --all-features

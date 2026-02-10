@@ -1,88 +1,152 @@
-use alloy_consensus::TxEnvelope;
+use alloy_consensus::{Signed, TxEip1559, TxEip2930, TxEip4844, TxEip4844Variant, TxEip7702, TxEnvelope, TxLegacy, transaction::Recovered};
+use alloy_eips::eip2930::AccessList;
+use alloy_primitives::{Address, B256, Bytes, Signature, TxKind, U256};
 use alloy_provider::{Network, Provider};
 use alloy_rpc_types_eth::Transaction;
 use alloy_transport::TransportResult;
 use async_trait::async_trait;
 use serde::{Deserialize, Deserializer};
-use serde_json::Value;
-use tracing::error;
 
 pub const MEV_BLOCKER_SEARCHERS_URL: &str = "wss://searchers.mevblocker.io";
 
 #[derive(Debug, Clone)]
 pub struct MevBlockerTx(pub Transaction<TxEnvelope>);
 
-// Adjust fields to parse into `alloy_rpc_types_eth::Transaction`.
-// MEV Blocker pending transactions lacks e.g. fields like `r`, `s`, `v`, and `yParity`.
-// API doc: https://docs.cow.fi/mevblocker/searchers/bidding-on-transactions
+/// Raw transaction from the MEV Blocker API.
+/// API doc: https://docs.mevblocker.io/how-to/searchers/listen
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct RawMevBlockerTx {
+    #[serde(default, with = "alloy_serde::quantity::opt")]
+    chain_id: Option<u64>,
+    #[serde(default)]
+    to: Option<Address>,
+    #[serde(default)]
+    value: U256,
+    #[serde(default, deserialize_with = "deserialize_data")]
+    data: Bytes,
+    #[serde(default)]
+    access_list: AccessList,
+    #[serde(with = "alloy_serde::quantity")]
+    nonce: u64,
+    #[serde(default, with = "alloy_serde::quantity::opt")]
+    gas_price: Option<u128>,
+    #[serde(default, with = "alloy_serde::quantity::opt")]
+    max_priority_fee_per_gas: Option<u128>,
+    #[serde(default, with = "alloy_serde::quantity::opt")]
+    max_fee_per_gas: Option<u128>,
+    #[serde(with = "alloy_serde::quantity")]
+    gas: u64,
+    #[serde(default, rename = "type", with = "alloy_serde::quantity::opt")]
+    tx_type: Option<u8>,
+    hash: B256,
+    from: Address,
+}
+
+/// Deserialize the `data` field which can be a hex string or null.
+fn deserialize_data<'de, D>(deserializer: D) -> Result<Bytes, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    Ok(Option::<Bytes>::deserialize(deserializer)?.unwrap_or_default())
+}
+
 impl<'de> Deserialize<'de> for MevBlockerTx {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,
     {
-        let mut value: Value = Deserialize::deserialize(deserializer)?;
-        let original_input = value.to_string(); // Save the original value for logging
+        let raw = RawMevBlockerTx::deserialize(deserializer)?;
 
-        // If the "type" field is missing, add type 0x0
-        if value.get("type").is_none()
-            && let Some(obj) = value.as_object_mut()
-        {
-            obj.insert("type".to_string(), Value::String("0x0".to_string()));
-        }
+        let sig = Signature::new(U256::ZERO, U256::ZERO, false);
+        let tx_type = raw.tx_type.unwrap_or(0);
 
-        // Put the content of the "data" field into the "input" field
-        // If the "data" field is null use "0x" as the default value
-        if let Some(data) = value.get_mut("data") {
-            let mut input = data.take();
-            if input.is_null() {
-                input = Value::String("0x".to_string());
-            }
-            if let Some(obj) = value.as_object_mut() {
-                obj.insert("input".to_string(), input);
-            }
-        }
-        value.as_object_mut().unwrap().remove("data");
-
-        if value.get("type").unwrap_or(&Value::String("0x".to_string())).as_str().unwrap_or_default() == "0x3" {
-            if value.get("blobVersionedHashes").is_none()
-                && let Some(obj) = value.as_object_mut()
-            {
-                obj.insert("blobVersionedHashes".to_string(), Value::Array(vec![]));
-            }
-            if value.get("maxFeePerBlobGas").is_none()
-                && let Some(obj) = value.as_object_mut()
-            {
-                obj.insert("maxFeePerBlobGas".to_string(), Value::String("0x0".to_string()));
-            }
-        }
-
-        // If the "type" field is 0x4 and "authorizationList" is missing, add an empty array
-        if value.get("type").unwrap_or(&Value::String("0x".to_string())).as_str().unwrap_or_default() == "0x4"
-            && value.get("authorizationList").is_none()
-            && let Some(obj) = value.as_object_mut()
-        {
-            obj.insert("authorizationList".to_string(), Value::Array(vec![]));
-        }
-
-        // Add the "r", "s", "v" fields
-        if let Some(obj) = value.as_object_mut() {
-            obj.insert("r".to_string(), Value::String("".to_string()));
-            obj.insert("s".to_string(), Value::String("".to_string()));
-            obj.insert("v".to_string(), Value::String("0x1B".to_string()));
-            obj.insert("yParity".to_string(), Value::String("0x1".to_string()));
-        }
-
-        let tx: Transaction<TxEnvelope> = match serde_json::from_value(value) {
-            Ok(tx) => tx,
-            Err(err) => {
-                // This can only happen when the format of MEV Blocker changes, or we have a bug.
-                // Log this error here with the original input, because it will be swallowed by Alloy.
-                error!(?err, %original_input, "Error deserializing MevBlockerTx");
-                return Err(serde::de::Error::custom(err));
-            }
+        let envelope = match tx_type {
+            0 => TxEnvelope::Legacy(Signed::new_unchecked(
+                TxLegacy {
+                    chain_id: raw.chain_id,
+                    nonce: raw.nonce,
+                    gas_price: raw.gas_price.unwrap_or(0),
+                    gas_limit: raw.gas,
+                    to: raw.to.map_or(TxKind::Create, TxKind::Call),
+                    value: raw.value,
+                    input: raw.data,
+                },
+                sig,
+                raw.hash,
+            )),
+            1 => TxEnvelope::Eip2930(Signed::new_unchecked(
+                TxEip2930 {
+                    chain_id: raw.chain_id.unwrap_or(1),
+                    nonce: raw.nonce,
+                    gas_price: raw.gas_price.unwrap_or(0),
+                    gas_limit: raw.gas,
+                    to: raw.to.map_or(TxKind::Create, TxKind::Call),
+                    value: raw.value,
+                    access_list: raw.access_list,
+                    input: raw.data,
+                },
+                sig,
+                raw.hash,
+            )),
+            2 => TxEnvelope::Eip1559(Signed::new_unchecked(
+                TxEip1559 {
+                    chain_id: raw.chain_id.unwrap_or(1),
+                    nonce: raw.nonce,
+                    gas_limit: raw.gas,
+                    max_fee_per_gas: raw.max_fee_per_gas.unwrap_or(0),
+                    max_priority_fee_per_gas: raw.max_priority_fee_per_gas.unwrap_or(0),
+                    to: raw.to.map_or(TxKind::Create, TxKind::Call),
+                    value: raw.value,
+                    access_list: raw.access_list,
+                    input: raw.data,
+                },
+                sig,
+                raw.hash,
+            )),
+            3 => TxEnvelope::Eip4844(Signed::new_unchecked(
+                TxEip4844Variant::TxEip4844(TxEip4844 {
+                    chain_id: raw.chain_id.unwrap_or(1),
+                    nonce: raw.nonce,
+                    gas_limit: raw.gas,
+                    max_fee_per_gas: raw.max_fee_per_gas.unwrap_or(0),
+                    max_priority_fee_per_gas: raw.max_priority_fee_per_gas.unwrap_or(0),
+                    to: raw.to.unwrap_or_default(),
+                    value: raw.value,
+                    access_list: raw.access_list,
+                    blob_versioned_hashes: vec![],
+                    max_fee_per_blob_gas: 0,
+                    input: raw.data,
+                }),
+                sig,
+                raw.hash,
+            )),
+            4 => TxEnvelope::Eip7702(Signed::new_unchecked(
+                TxEip7702 {
+                    chain_id: raw.chain_id.unwrap_or(1),
+                    nonce: raw.nonce,
+                    gas_limit: raw.gas,
+                    max_fee_per_gas: raw.max_fee_per_gas.unwrap_or(0),
+                    max_priority_fee_per_gas: raw.max_priority_fee_per_gas.unwrap_or(0),
+                    to: raw.to.unwrap_or_default(),
+                    value: raw.value,
+                    access_list: raw.access_list,
+                    authorization_list: vec![],
+                    input: raw.data,
+                },
+                sig,
+                raw.hash,
+            )),
+            other => return Err(serde::de::Error::custom(format!("unknown tx type: 0x{other:x}"))),
         };
 
-        Ok(MevBlockerTx(tx))
+        Ok(MevBlockerTx(Transaction {
+            inner: Recovered::new_unchecked(envelope, raw.from),
+            block_hash: None,
+            block_number: None,
+            transaction_index: None,
+            effective_gas_price: None,
+        }))
     }
 }
 
@@ -100,7 +164,7 @@ where
     async fn subscribe_mev_blocker_pending_transactions(&self) -> TransportResult<alloy_pubsub::Subscription<MevBlockerTx>> {
         self.root().client().pubsub_frontend().ok_or_else(alloy_transport::TransportErrorKind::pubsub_unavailable)?;
 
-        let mut call = self.client().request("eth_subscribe", ("mevBlocker_subscribePartialPendingTransactions",));
+        let mut call = self.client().request("eth_subscribe", ("mevblocker_partialPendingTransactions",));
         call.set_is_subscription();
         let id = call.await?;
         self.root().get_subscription(id).await
