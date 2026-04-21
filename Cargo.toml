@@ -6,15 +6,15 @@ rust-version = "1.85"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-alloy-consensus = "1.6.3"
-alloy-eips = "1.6.3"
-alloy-primitives = { version = "1.5.4", features = ["serde"] }
-alloy-provider = { version = "1.6.3", features = ["ws"] }
-alloy-pubsub = "1.6.3"
-alloy-rpc-types-eth = "1.6.3"
-alloy-serde = "1.6.3"
-alloy-transport = "1.6.3"
-alloy-transport-ws = "1.6.3"
+alloy-consensus = "2.0.0"
+alloy-eips = "2.0.0"
+alloy-primitives = { version = "1.5.7", features = ["serde"] }
+alloy-provider = { version = "2.0.0", features = ["ws"] }
+alloy-pubsub = "2.0.0"
+alloy-rpc-types-eth = "2.0.0"
+alloy-serde = "2.0.0"
+alloy-transport = "2.0.0"
+alloy-transport-ws = "2.0.0"
 async-trait = "0.1.86"
 serde = { version = "1.0.217", features = ["derive"] }
 
