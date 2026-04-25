@@ -21,4 +21,4 @@ let subscription = provider.subscribe_mev_blocker_pending_transactions().await?;
 Many thanks to the [CoW DAO](https://cow.fi/) to provide such an API. And many thanks to the [alloy-rs](https://github.com/alloy-rs) team.
 
 # License
-This project is licensed under the [Apache 2.0](./LICENSE-APACHE) or [MIT](./LICENSE-MIT).
+This project is licensed under the [Apache 2.0](./LICENSE-APACHE) or [MIT](./LICENSE-MIT).a
